@@ -27,7 +27,8 @@ final class PipelineTests: XCTestCase {
           Changes<DemoState>.init(
             old: s,
             new: s
-          )
+          ),
+          storage: ()
         ),
         .noUpdates
       )
@@ -42,7 +43,8 @@ final class PipelineTests: XCTestCase {
           Changes<DemoState>.init(
             old: .init(name: "A", count: 1),
             new: .init(name: "A", count: 2)
-          )
+          ),
+          storage: ()
         ),
         .noUpdates
       )
@@ -76,7 +78,8 @@ final class PipelineTests: XCTestCase {
           Changes<DemoState>.init(
             old: s,
             new: s
-          )
+          ),
+          storage: ()
         ),
         .noUpdates
       )
@@ -91,7 +94,8 @@ final class PipelineTests: XCTestCase {
           Changes<DemoState>.init(
             old: .init(name: "A", count: 1),
             new: .init(name: "A", count: 2)
-          )
+          ),
+          storage: ()
         ),
         .noUpdates
       )

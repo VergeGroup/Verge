@@ -328,7 +328,7 @@ where _StorageSelector.Storage == _TableSelector.Storage {
 
   typealias Entity = _TableSelector.Table.Entity
   typealias Input = Changes<_StorageSelector.Source>
-  typealias Storage = _StorageSelector.Storage
+  typealias EntityStorage = _StorageSelector.Storage
   typealias Output = EntityWrapper<Entity>
 
   private let selector: AbsoluteTableSelector<_StorageSelector, _TableSelector>
@@ -342,7 +342,7 @@ where _StorageSelector.Storage == _TableSelector.Storage {
     self.selector = selector
   }
 
-  func yield(_ input: consuming Input) -> Output {
+  func yield(_ input: consuming Input, storage: Void) -> Output {
 
     let result = selector.table(source: input.primitive)
       .find(by: entityID)
@@ -351,21 +351,21 @@ where _StorageSelector.Storage == _TableSelector.Storage {
 
   }
 
-  func yieldContinuously(_ input: Input) -> Verge.ContinuousResult<Output> {
+  func yieldContinuously(_ input: Input, storage: Void) -> Verge.ContinuousResult<Output> {
 
     guard let previous = input.previous else {
-      return .new(yield(input))
+      return .new(yield(input, storage: storage))
     }
 
-    if NormalizedStorageComparisons<Storage>.StorageComparison()(selector.storage(source: input.primitive), selector.storage(source: previous.primitive)) {
+    if NormalizedStorageComparisons<EntityStorage>.StorageComparison()(selector.storage(source: input.primitive), selector.storage(source: previous.primitive)) {
       return .noUpdates
     }
 
-    if NormalizedStorageComparisons<Storage>.TableComparison<_TableSelector.Table>()(selector.table(source: input.primitive), selector.table(source: previous.primitive)) {
+    if NormalizedStorageComparisons<EntityStorage>.TableComparison<_TableSelector.Table>()(selector.table(source: input.primitive), selector.table(source: previous.primitive)) {
       return .noUpdates
     }
 
-    return .new(yield(input))
+    return .new(yield(input, storage: storage))
 
   }
 
@@ -379,7 +379,7 @@ where _StorageSelector.Storage == _TableSelector.Storage {
 
   typealias Entity = _TableSelector.Table.Entity
   typealias Input = Changes<_StorageSelector.Source>
-  typealias Storage = _StorageSelector.Storage
+  typealias EntityStorage = _StorageSelector.Storage
   typealias Output = NonNullEntityWrapper<Entity>
 
   private let selector: AbsoluteTableSelector<_StorageSelector, _TableSelector>
@@ -399,7 +399,7 @@ where _StorageSelector.Storage == _TableSelector.Storage {
 
   }
 
-  func yield(_ input: consuming Input) -> Output {
+  func yield(_ input: consuming Input, storage: Void) -> Output {
 
     let result = selector.table(source: input.primitive)
       .find(by: entityID)
@@ -412,21 +412,21 @@ where _StorageSelector.Storage == _TableSelector.Storage {
 
   }
 
-  func yieldContinuously(_ input: Input) -> Verge.ContinuousResult<Output> {
+  func yieldContinuously(_ input: Input, storage: Void) -> Verge.ContinuousResult<Output> {
 
     guard let previous = input.previous else {
-      return .new(yield(input))
+      return .new(yield(input, storage: storage))
     }
 
-    if NormalizedStorageComparisons<Storage>.StorageComparison()(selector.storage(source: input.primitive), selector.storage(source: previous.primitive)) {
+    if NormalizedStorageComparisons<EntityStorage>.StorageComparison()(selector.storage(source: input.primitive), selector.storage(source: previous.primitive)) {
       return .noUpdates
     }
 
-    if NormalizedStorageComparisons<Storage>.TableComparison<_TableSelector.Table>()(selector.table(source: input.primitive), selector.table(source: previous.primitive)) {
+    if NormalizedStorageComparisons<EntityStorage>.TableComparison<_TableSelector.Table>()(selector.table(source: input.primitive), selector.table(source: previous.primitive)) {
       return .noUpdates
     }
 
-    return .new(yield(input))
+    return .new(yield(input, storage: storage))
 
   }
 

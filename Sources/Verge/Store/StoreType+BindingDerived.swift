@@ -48,15 +48,19 @@ private struct BindingDerivedPipeline<Source: Equatable, Output: Equatable, Back
     self.backingPipeline = backingPipeline
   }
 
-  func yield(_ input: Changes<Source>) -> Output {
-    backingPipeline.yield(input)
+  func makeStorage() -> BackingPipeline.Storage {
+    backingPipeline.makeStorage()
   }
 
-  func yieldContinuously(_ input: Changes<Source>) -> ContinuousResult<Output> {
+  func yield(_ input: Changes<Source>, storage: Storage) -> Output {
+    backingPipeline.yield(input, storage: storage)
+  }
+
+  func yieldContinuously(_ input: Changes<Source>, storage: Storage) -> ContinuousResult<Output> {
     if input._transaction.isFromBindingDerived {
       return .noUpdates
     }
-    return backingPipeline.yieldContinuously(input)
+    return backingPipeline.yieldContinuously(input, storage: storage)
   }
 
 }
