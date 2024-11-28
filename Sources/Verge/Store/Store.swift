@@ -811,14 +811,14 @@ extension Store {
   }
   
   final func _sinkStateEvent(subscriber: @escaping (_StoreEvent<State, Activity>.StateEvent) -> Void) -> EventEmitterCancellable {
-    addEventHandler { event in
+    addEventHandler(subscriber: self) { event in
       guard case .state(let stateEvent) = event else { return }
       subscriber(stateEvent)
     }
   }
   
   final func _sinkActivityEvent(subscriber: @escaping (Activity) -> Void) -> EventEmitterCancellable {
-    addEventHandler { event in
+    addEventHandler(subscriber: self) { event in
       guard case .activity(let activity) = event else { return }
       subscriber(activity)
     }

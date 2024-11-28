@@ -31,10 +31,12 @@ public final class EventEmitterCancellable: Hashable, Cancellable, @unchecked Se
     lhs === rhs
   }
 
-  private weak var owner: EventEmitterType?
+  private weak var owner: (any EventEmitterType)?
+  private(set) weak var subscriber: (any EventEmitterType)?
 
-  fileprivate init(owner: EventEmitterType) {
+  fileprivate init(owner: any EventEmitterType, subscriber: (any EventEmitterType)?) {
     self.owner = owner
+    self.subscriber = subscriber
   }
 
   public func hash(into hasher: inout Hasher) {
@@ -46,8 +48,9 @@ public final class EventEmitterCancellable: Hashable, Cancellable, @unchecked Se
   }
 }
 
-protocol EventEmitterType: AnyObject, Sendable {
+public protocol EventEmitterType: AnyObject, Sendable {
   func removeEventHandler(_ token: EventEmitterCancellable)
+  func _debug_subscribers() -> [any EventEmitterType]
 }
 
 public protocol EventEmitterEventType {
@@ -134,15 +137,15 @@ open class EventEmitter<Event: EventEmitterEventType>: EventEmitterType, @unchec
 
   @_spi(EventEmitter)
   @discardableResult
-  public func addEventHandler(_ eventReceiver: @escaping (Event) -> Void) -> EventEmitterCancellable {
-    let token = EventEmitterCancellable(owner: self)
+  public func addEventHandler(subscriber: (any EventEmitterType)? = nil, eventReceiver: @escaping (Event) -> Void) -> EventEmitterCancellable {
+    let token = EventEmitterCancellable(owner: self, subscriber: subscriber)
     subscribers.modify {
       $0[token] = eventReceiver
     }
     return token
   }
 
-  func removeEventHandler(_ token: EventEmitterCancellable) {
+  public func removeEventHandler(_ token: EventEmitterCancellable) {
     var itemToRemove: ((Event) -> Void)? = nil
     subscribers.modify {
       itemToRemove = $0[token]
@@ -161,6 +164,64 @@ open class EventEmitter<Event: EventEmitterEventType>: EventEmitterType, @unchec
     deinitHandlers.modify {
       $0.append(onDeinit)
     }
+  }
+
+  public func _debug_subscribers() -> [any EventEmitterType] {
+    subscribers.value.keys.compactMap { $0.subscriber }
+  }
+
+  public func describeSubscriptionTree() -> String {
+
+    return TreeRenderer.renderTree(
+      root: self as EventEmitterType,
+      value: { node in
+        String(
+          "Emitter"
+        )
+      },
+      children: { $0._debug_subscribers() }
+    )
+
+  }
+
+  private enum TreeRenderer {
+    struct Line {
+      var depth: Int
+      var string: String
+    }
+
+    static func renderTree<T>(
+      root: T,
+      value: (T) -> String,
+      children: (T) -> [T]
+    ) -> String {
+
+      var lines: [Line] = []
+
+      func renderTree(
+        root: T,
+        depth: Int
+      ) {
+
+        lines.append(.init(depth: depth, string: value(root)))
+
+        for child in children(root) {
+
+          renderTree(root: child, depth: depth + 1)
+
+        }
+
+      }
+
+      renderTree(root: root, depth: 0)
+
+      return lines.map { line in
+        Array(repeating: " ", count: line.depth * 2).joined() + "├─ " + line.string
+      }
+      .joined(separator: "\n")
+
+    }
+
   }
 
 }
